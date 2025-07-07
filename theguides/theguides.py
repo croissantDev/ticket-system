@@ -1302,5 +1302,5 @@ async def wait_for(
     await ctx.channel.send(embed=embed)
 
 
-async def setup(bot):
-    await bot.add_cog(GuidesCommittee(bot))
+def setup(bot):
+    bot.add_cog(GuidesCommittee(bot))

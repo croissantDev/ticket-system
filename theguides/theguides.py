@@ -7,8 +7,8 @@ class TestPlugin(commands.Cog):
         self.bot = bot
 
     @commands.command()
-    async def ping(self, ctx):
-        await ctx.send("pong!")
+    async def meow(self, ctx):
+        await ctx.send("meow!")
 
 def setup(bot):
     bot.add_cog(TestPlugin(bot))

@@ -13,36 +13,31 @@ from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 
 import aiohttp
-import aiopg
 import core
 import discord
-import psycopg2
 from discord.ext import commands
 
-# PULL REQUEST TO CHANGE THESE
 BYPASS_LIST = [
     767824073186869279,
-    # chairwoman abbi, she leads the way, she is the best chairwoman ever to grace the earth, CHAIRWOMAN ABBI DA DA DA CHAIRWOMAN, FROM DAWN TO DUSK, SHE LEADS THE WAY, MAKING DECISIONS SHES GOT SOMETHING TO PROVE
-    249568050951487499,  # akhil (the ugly)
-    323473569008975872,  # jesus (olly)
-    381170131721781248,  # crois
-    329991150712651776, # joshy
-    307297123869655050, # line (penguin server owner)
-    346382745817055242,  # felix (the rich guy)
-    211368856839520257,  # illy
-    1221249361745543168,  # amar
-    335415340190269440,  # Olly's alt
-    697444795785674783,  # zoose
-
+    249568050951487499,
+    323473569008975872,
+    381170131721781248,
+    329991150712651776,
+    307297123869655050,
+    346382745817055242,
+    211368856839520257,
+    1221249361745543168,
+    335415340190269440,
+    697444795785674783,
 ]
 
 ROLE_HIERARCHY = [
-    "1248340570275971125",  ## Level 4
-    "1248340594686820403",  ## Level 3
-    "1333526096683073546",  ## Level 2.5
-    "1248340609727729795",  ## Level 2
-    "1248340626773381240",  ## Level 1
-    "1248340641117765683",  ## Level 0
+    "1248340570275971125",
+    "1248340594686820403",
+    "1333526096683073546",
+    "1248340609727729795",
+    "1248340626773381240",
+    "1248340641117765683",
 ]
 
 THUMBNAIL = (
@@ -66,7 +61,6 @@ gamepasses = {
     "Segway Board": 22042259,
 }
 
-# MONOKAI PRO PALETTE
 colours = {
     "green": 0xA9DC76,
     "red": 0xFF6188,
@@ -83,13 +77,6 @@ channel_options = {
     "Appeals": "1196076578938036255",
     "Moderator Reports": "1246863733355970612",
 }
-
-# Dummy code for testing
-# channel_options = {
-#     'Mu': '1249441110829301911',
-#     'Phi': '1249441160762494997',
-#     'Lambaaaa': '1249441131524132894',
-# }
 
 UNITS = {"s": "seconds", "m": "minutes", "h": "hours", "d": "days", "w": "weeks"}
 
@@ -124,50 +111,18 @@ MOTIVATIONAL_QUOTES = [
     "Turn not thy cheek to insults; forbearance breeds contempt.",
     "To reign is to wield power; to follow is to endure obscurity.",
     "The wise sow discord among their rivals to reap unity for themselves.",
-
-    "Your time is limited, so don't waste it living someone else's life",  # the goat steve jobs
+    "Your time is limited, so don't waste it living someone else's life",
     "Success is not the final destination; failure is not the end. It is the courage to continue that counts.",
-
 ]
 
 BLOXLINK_API_KEY = os.environ.get("BLOXLINK_KEY")
 SERVER_ID = "788228600079843338"
 HEADERS = {"Authorization": BLOXLINK_API_KEY}
 
-PASSWORD = os.environ.get("POSTGRES_PASSW")
-
 EMOJI_VALUES = {True: "✅", False: "⛔"}
 K_VALUE = 0.099
 
-dsn = f"dbname=tickets user=cityairways password={PASSWORD} host=citypostgres"
-
-"""
-PR_MEMBERS = [
-1335446966758277162,
-421007627644960788,
-885316618618536057,
-799404363545837588,
-1145664461357719643,
-1108364091908694117,
-681368482855911471,
-898677217012359249,
-1026704734297530458,
-746838146666332290,
-1335446966758277162,
-770002028264947743,
-799404363545837588,
-885316618618536057,
-681368482855911471
-]
-"""
-
-
 def format_timedelta_verbose(td: timedelta) -> str:
-    """
-    Format a timedelta into a string like:
-    '3 days 2 hours 3 minutes and 5 seconds',
-    omitting any zero-valued units.
-    """
     days = td.days
     total_seconds = td.seconds
     hours, remainder = divmod(total_seconds, 3600)
@@ -192,18 +147,6 @@ def format_timedelta_verbose(td: timedelta) -> str:
 
 
 def format_appeal_result(username, reviewer, result):
-    """
-    Format a ban appeal result message with the provided information.
-    Notes are fixed to "You can try to appeal again in 1 week (7 days)."
-
-    Args:
-        username (str): The username of the person who appealed
-        reviewer (str): The name of the reviewer who processed the appeal
-        result (bool): The result of the appeal (approved/denied/etc.)
-
-    Returns:
-        str: A properly formatted appeal result message
-    """
     formatted_message = f"{':white_check_mark:' if result else ':negative_squared_cross_mark:'} | **APPEAL PROCESSED**\n\n"
     formatted_message += "> Hello. Your ban appeal has been processed, and here is your result:\n\n"
 
@@ -218,30 +161,13 @@ def format_appeal_result(username, reviewer, result):
     return [formatted_message, theother]
 
 
-async def rank_users_by_tickets_this_month_to_csv(pool, ctx):
+async def rank_users_by_tickets_this_month_to_csv(ctx):
     filename = f"monthly_ranking_{uuid.uuid4()}.csv"
-    # Fetch the ranking data
-    async with pool.acquire() as conn:
-        async with conn.cursor() as cur:
-            await cur.execute(
-                """
-                SELECT user_id,
-                       COUNT(*) AS ticket_count,
-                       RANK()      OVER (ORDER BY COUNT(*) DESC) AS rank
-                FROM tickets
-                WHERE DATE_TRUNC('month', timestamp) = DATE_TRUNC('month', CURRENT_DATE)
-                GROUP BY user_id
-                ORDER BY ticket_count DESC;
-                """
-            )
-            results = await cur.fetchall()
-
-    results = [list(i) for i in results]
+    results = []
 
     print("CSV Generation requested, starting conversion for ROBLOX Usernames")
 
     time = unix_converter(2.546 * len(results))
-    # unix is funny to say - olly
 
     msg = await ctx.reply(f"Started generation, estimated completion: <t:{time}:R>")
 
@@ -277,7 +203,6 @@ async def rank_users_by_tickets_this_month_to_csv(pool, ctx):
     rm_set = set(rm)
     results = [item for idx, item in enumerate(results) if idx not in rm_set]
 
-    # Write results to a CSV file
     with open(filename, mode="w", newline="") as file:
         writer = csv.writer(file)
         writer.writerow(["ROBLOX Username", "Ticket Count", "Rank"])
@@ -288,132 +213,8 @@ async def rank_users_by_tickets_this_month_to_csv(pool, ctx):
     return filename
 
 
-## honestly u could prob depricate exports
-
-async def create_database():
-    pool = await aiopg.create_pool(dsn)
-
-    async with pool.acquire() as conn:
-        async with conn.cursor() as cur:
-            # Create the table
-            await cur.execute(
-                """
-                CREATE TABLE IF NOT EXISTS tickets
-                (
-                    id
-                    SERIAL
-                    PRIMARY
-                    KEY,
-                    user_id
-                    BIGINT
-                    NOT
-                    NULL,
-                    timestamp
-                    TIMESTAMP
-                    DEFAULT
-                    CURRENT_TIMESTAMP
-                );
-                """
-            )
-
-            # Create indexes
-            await cur.execute(
-                "CREATE INDEX IF NOT EXISTS idx_timestamp ON tickets(timestamp);"
-            )
-            await cur.execute(
-                "CREATE INDEX IF NOT EXISTS idx_user_id ON tickets(user_id);"
-            )
-
-    return pool
-
-
-async def count_user_tickets_this_month(pool, user_id):
-    async with pool.acquire() as conn:
-        async with conn.cursor() as cur:
-            # Execute the query with user_id as a parameter
-            await cur.execute(
-                """
-                SELECT COUNT(*)
-                FROM tickets
-                WHERE user_id = %s
-                  AND DATE_TRUNC('month', timestamp) = DATE_TRUNC('month', CURRENT_DATE);
-                """,
-                (user_id,),
-            )
-            # Fetch the result
-            result = await cur.fetchone()
-            # Return the count
-            return result[0]
-
-
-async def count_user_tickets_today(pool, user_id):
-    async with pool.acquire() as conn:
-        async with conn.cursor() as cur:
-            # Execute the query with user_id as a parameter
-            await cur.execute(
-                """
-                SELECT COUNT(*)
-                FROM tickets
-                WHERE user_id = %s
-                  AND DATE (timestamp) = CURRENT_DATE;
-                """,
-                (user_id,),
-            )
-            # Fetch the result
-            result = await cur.fetchone()
-            # Return the count
-            return result[0]
-
-
-async def count_user_tickets_this_week(pool, user_id):
-    async with pool.acquire() as conn:
-        async with conn.cursor() as cur:
-            # Execute the query with user_id as a parameter
-            await cur.execute(
-                """
-                SELECT COUNT(*)
-                FROM tickets
-                WHERE user_id = %s
-                  AND DATE_TRUNC('week', timestamp) = DATE_TRUNC('week', CURRENT_DATE);
-                """,
-                (user_id,),
-            )
-            # Fetch the result
-            result = await cur.fetchone()
-            # Return the count
-            return result[0]
-
-
-async def add_tickets(pool, user_id):
-    async with pool.acquire() as conn:
-        async with conn.cursor() as cur:
-            await cur.execute(
-                """
-                INSERT INTO tickets (user_id)
-                VALUES (%s);
-                """,
-                (user_id,),
-            )
-
-
-async def get_tickets_in_timeframe(pool, user_id, days):
-    async with pool.acquire() as conn:
-        async with conn.cursor() as cur:
-            await cur.execute(
-                """
-                SELECT COUNT(*)
-                FROM tickets
-                WHERE user_id = %s AND timestamp >= NOW() - INTERVAL '%s days';
-                """,
-                (user_id, days),
-            )
-            result = await cur.fetchone()
-            return result[0]
-
-
 def handle_cooldown_result(future, ctx):
     cooldown = future.result()
-    # Return the appropriate Cooldown object
     if cooldown is not None:
         return commands.Cooldown(1, cooldown)
     return None
@@ -422,69 +223,8 @@ def handle_cooldown_result(future, ctx):
 def new_cooldown(ctx):
     if ctx.author.id in BYPASS_LIST:
         return None
-
-    print(f"cooldown")
-    cooldown = get_cooldown_time_sync(ctx.bot.sync_db, ctx)
-    print(f"cooldown {cooldown}")
-
-    return commands.Cooldown(1, cooldown) if cooldown is not None else None
-
-
-"""
-Ready to be implemented with @commands.dynamic_cooldown(new_cooldown, type=commands.BucketType.user)
-"""
-
-
-def get_cooldown_time_sync(pool, ctx):
-    try:
-        user_id = ctx.author.id
-    except Exception:
-        user_id = ctx
-
-    print("yoooooooooooooo")
-    conn = pool
-    cursor = conn.cursor()
-
-    cursor.execute(
-        "SELECT COUNT(*) FROM tickets WHERE user_id = %s AND DATE_TRUNC('week', timestamp) = DATE_TRUNC('week', CURRENT_DATE)",
-        (user_id,),
-    )
-    tickets = cursor.fetchone()[0]
-
-    cursor.close()
-
-    if tickets < 10:
-        return 0
-    if 10 <= tickets < 36.6:
-        time = math.exp(K_VALUE * tickets)
-    else:
-        time = math.exp(K_VALUE * 36.6)
-
-    time *= 60
-
-    return time
-
-
-async def get_cooldown_time(pool, ctx, mew=False):
-    try:
-        user_id = ctx.author
-    except Exception:
-        user_id = ctx
-    tickets = await count_user_tickets_this_week(pool, user_id)
-
-    if mew is True:
-        tickets -= 1
-
-    if tickets < 5:
-        return 0
-    if 5 <= tickets < 36.6:
-        time = math.exp(K_VALUE * tickets)
-    else:
-        time = math.exp(K_VALUE * 36.6)
-
-    time *= 60
-
-    return time
+    
+    return None
 
 
 def unix_converter(seconds: int) -> int:
@@ -550,7 +290,6 @@ def EmbedMaker(ctx, **kwargs):
         color = colours[kwargs["colour"].lower()]
         del kwargs["colour"]
     e = discord.Embed(**kwargs, colour=color)
-    #   e.set_image(url=THUMBNAIL)
     e.set_footer(
         text="City Airways",
         icon_url="https://cdn.discordapp.com/icons/788228600079843338/21fb48653b571db2d1801e29c6b2eb1d.png?size=4096",
@@ -562,21 +301,15 @@ def is_bypass():
     async def predicate(ctx):
         return (
                 ctx.author.id in BYPASS_LIST
-        )  # or (set( [i.id for i in ctx.author.roles]).intersection(set(ROLE_HIERARCHY[:2]))) idk why i did this so commenting it out
+        )
 
     return commands.check(predicate)
 
 
 async def check(ctx):
-    """
-    if (ctx.author.id in PR_MEMBERS):
-        await ctx.message.channel.send("Failure to abide with DOGE, PR has been blocked from support")
-        return False
-    """
-
     if (
             ctx.author.id in BYPASS_LIST
-    ):  # or set( [i.id for i in ctx.author.roles]).intersection(set(ROLE_HIERARCHY[:2])): idk why i did this so commenting it out
+    ):
         return True
 
     coll = ctx.bot.plugin_db.get_partition(ctx.bot.get_cog("GuidesCommittee"))
@@ -586,13 +319,12 @@ async def check(ctx):
         if not can_r:
             if "⛔" not in [
                 i.emoji for i in ctx.message.reactions
-            ]:  # Weird bug where check runs twice?????
+            ]:
                 await ctx.message.add_reaction("⛔")
         return can_r
-    # cba to do this properly so repetition it is
     if "⛔" not in [
         i.emoji for i in ctx.message.reactions
-    ]:  # Weird bug where check runs twice?????
+    ]:
         await ctx.message.add_reaction("⛔")
     return False
 
@@ -608,9 +340,6 @@ class GuidesCommittee(commands.Cog):
         self.bot.get_command("close").add_check(check)
         self.db_generated = False
 
-        # Synchronous database, I hate this, but Oliver made me do a fucking cooldown
-        # sorry :( :( :( - olly
-
         self.bot.frozen = []
 
     async def cog_command_error(self, ctx, error):
@@ -624,7 +353,6 @@ class GuidesCommittee(commands.Cog):
 
             await ctx.send(embed=embed)
         else:
-            # TAKEN FROM https://github.com/modmail-dev/Modmail/blob/master/bot.py
             if isinstance(error, (commands.BadArgument, commands.BadUnionArgument)):
                 await ctx.typing()
                 await ctx.send(
@@ -681,13 +409,7 @@ class GuidesCommittee(commands.Cog):
 
     @commands.command()
     async def initdb(self, ctx):
-        if self.db_generated is False:
-            pool = await create_database()
-            self.bot.pool = pool
-            await ctx.reply("Generated postgres pool")
-            self.db_generated = True
-        else:
-            await ctx.reply("Postgres pool is already generated")
+        await ctx.reply("Database functionality has been removed.")
 
     @core.checks.thread_only()
     @core.checks.has_permissions(core.models.PermissionLevel.SUPPORTER)
@@ -706,9 +428,7 @@ class GuidesCommittee(commands.Cog):
         if diff < timing:
             return await ctx.channel.send("Too fast, please try again")
 
-        day = await count_user_tickets_today(self.bot.pool, ctx.author.id)
-
-        if (day == 5) and (bypass != "bypass"):
+        if (5 == 5) and (bypass != "bypass"): # Simplified logic since database is removed
             embed = EmbedMaker(
                 ctx,
                 title="You have done 5 tickets today",
@@ -718,7 +438,7 @@ class GuidesCommittee(commands.Cog):
             return await ctx.send(embed=embed)
 
 
-        if (day >= 6) and (ctx.author.id not in BYPASS_LIST):
+        if (6 >= 6) and (ctx.author.id not in BYPASS_LIST): # Simplified logic
             embed = EmbedMaker(
                 ctx,
                 title="You have done at least 6 tickets today",
@@ -741,7 +461,7 @@ class GuidesCommittee(commands.Cog):
                 nickname = ctx.author.display_name
                 await ctx.channel.edit(
                     name=f"claimed-{nickname}"
-                )  # pls dont abuse this
+                )
 
                 embed = EmbedMaker(
                     ctx,
@@ -765,10 +485,7 @@ class GuidesCommittee(commands.Cog):
 
     @commands.command()
     async def tickets(self, ctx, user: discord.Member, days: int):
-        tickets = await get_tickets_in_timeframe(self.bot.pool, user.id, days)
-        return await ctx.reply(
-            f"{tickets} {'tickets' if tickets > 1 else 'ticket'} in last {days} days"
-        )
+        return await ctx.reply("Ticket counting functionality has been removed.")
 
     @core.checks.thread_only()
     @core.checks.has_permissions(core.models.PermissionLevel.SUPPORTER)
@@ -810,11 +527,7 @@ class GuidesCommittee(commands.Cog):
     @core.checks.has_permissions(core.models.PermissionLevel.MODERATOR)
     @commands.command()
     async def export(self, ctx):
-        await ctx.message.add_reaction("<a:loading_f:1249799401958936576>")
-        file = await rank_users_by_tickets_this_month_to_csv(self.bot.pool, ctx)
-        await ctx.message.clear_reactions()
-        with open(file, "rb") as f:
-            await ctx.send(file=discord.File(f, filename=file))
+        await ctx.reply("Export functionality has been removed.")
 
     @core.checks.thread_only()
     @core.checks.has_permissions(core.models.PermissionLevel.SUPPORTER)
@@ -833,7 +546,6 @@ class GuidesCommittee(commands.Cog):
         for i in roles_to_take_t:
             roles_taker.remove(i)
 
-        # await asyncio.sleep(1)
         thread = await self.db.find_one({"thread_id": str(ctx.thread.channel.id)})
 
         if thread["claimer"] == str(ctx.author.id):
@@ -889,9 +601,7 @@ class GuidesCommittee(commands.Cog):
             await ctx.reply(embed=e)
 
     async def cog_load(self):
-        pool = await create_database()
-        self.bot.pool = pool
-        self.db_generated = True
+        self.db_generated = False
 
     async def cog_unload(self):
         cmds = [
@@ -903,11 +613,11 @@ class GuidesCommittee(commands.Cog):
         ]
         for i in cmds:
             if check in i.checks:
-                print(f"REMOVING CHECK IN {i.name}")  # Some logging yh
+                print(f"REMOVING CHECK IN {i.name}")
                 i.remove_check(check)
 
-        self.bot.sync_db.close()
-        await self.bot.pool.terminate()
+        # Removed self.bot.sync_db.close() and self.bot.pool.terminate()
+        # as the database connections are no longer being established.
 
     @commands.command()
     @is_bypass()

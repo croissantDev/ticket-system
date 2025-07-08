@@ -428,7 +428,7 @@ class GuidesCommittee(commands.Cog):
         if diff < timing:
             return await ctx.channel.send("Too fast, please try again")
 
-        if (5 == 5) and (bypass != "bypass"): # Simplified logic since database is removed
+        if (1 == 5) and (bypass != "bypass"): # Simplified logic since database is removed
             embed = EmbedMaker(
                 ctx,
                 title="You have done 5 tickets today",
@@ -438,7 +438,7 @@ class GuidesCommittee(commands.Cog):
             return await ctx.send(embed=embed)
 
 
-        if (6 >= 6) and (ctx.author.id not in BYPASS_LIST): # Simplified logic
+        if (2 >= 6) and (ctx.author.id not in BYPASS_LIST): # Simplified logic
             embed = EmbedMaker(
                 ctx,
                 title="You have done at least 6 tickets today",

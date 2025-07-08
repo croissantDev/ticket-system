@@ -610,9 +610,6 @@ class GuidesCommittee(commands.Cog):
 
         # Synchronous database, I hate this, but Oliver made me do a fucking cooldown
         # sorry :( :( :( - olly
-        self.bot.sync_db = psycopg2.connect(
-            dbname="tickets", user="cityairways", password=PASSWORD, host="citypostgres"
-        )
 
         self.bot.frozen = []
 

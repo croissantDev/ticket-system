@@ -17,7 +17,7 @@ import aiopg
 import core
 import discord
 import psycopg2
-from discord.ext import commands, tasks
+from discord.ext import commands
 
 # PULL REQUEST TO CHANGE THESE
 BYPASS_LIST = [

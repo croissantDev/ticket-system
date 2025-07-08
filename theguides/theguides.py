@@ -1,14 +1,16 @@
-# plugins/test_plugin.py
-
 from discord.ext import commands
 
-class TestPlugin(commands.Cog):
+class Hello(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command()
-    async def meow(self, ctx):
-        await ctx.send("meow!")
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        print(message.content)
 
-def setup(bot):
-    bot.add_cog(TestPlugin(bot))
+    @commands.command()
+    async def say(self, ctx, *, message):
+        await ctx.send(message)
+
+async def setup(bot):
+    await bot.add_cog(Hello(bot))

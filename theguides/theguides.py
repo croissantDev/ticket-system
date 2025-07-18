@@ -475,9 +475,9 @@ async def get_cooldown_time(pool, ctx, mew=False):
     if mew is True:
         tickets -= 1
 
-    if tickets < 5:
+    if tickets < 8:
         return 0
-    if 5 <= tickets < 36.6:
+    if 8 <= tickets < 36.6:
         time = math.exp(K_VALUE * tickets)
     else:
         time = math.exp(K_VALUE * 36.6)

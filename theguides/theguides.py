@@ -711,21 +711,21 @@ class GuidesCommittee(commands.Cog):
 
         day = await count_user_tickets_today(self.bot.pool, ctx.author.id)
 
-        if (day == 5) and (bypass != "bypass"):
+        if (day == 8) and (bypass != "bypass"):
             embed = EmbedMaker(
                 ctx,
-                title="You have done 5 tickets today",
-                description=f"You've done 5 tickets today! Doing more will cause management to be notified. However if you wish to claim it run `.claim bypass`",
+                title="You have done 8 tickets today",
+                description=f"You've done 8 tickets today! Doing more will cause management to be notified. However if you wish to claim it run `.claim bypass`",
                 colour="red",
             )
             return await ctx.send(embed=embed)
 
 
-        if (day >= 6) and (ctx.author.id not in BYPASS_LIST):
+        if (day >= 9) and (ctx.author.id not in BYPASS_LIST):
             embed = EmbedMaker(
                 ctx,
-                title="You have done at least 6 tickets today",
-                description=f"You've done at least 6 tickets today! Doing more is not allowed. However, if you wish to claim it then please ask a management member to manually bypass your cooldown",
+                title="You have done at least 9 tickets today",
+                description=f"You've done at least 9 tickets today! Doing more is not allowed. However, if you wish to claim it then please ask a management member to manually bypass your cooldown",
                 colour="red",
             )
             return await ctx.send(embed=embed)

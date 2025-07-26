@@ -211,7 +211,7 @@ def format_appeal_result(username, reviewer, result):
     formatted_message += f"- Reviewed by: {reviewer}\n"
     formatted_message += f"- Result: {'Passed' if result else 'Failed'}\n"
     if result is False:
-        formatted_message += "- Notes: You can try to appeal again in 2 weeks (14 days).\n\n\n"
+        formatted_message += "- Notes: You can try to appeal again in 1 weeks (7 days).\n\n\n"
 
     theother = f"```\n{formatted_message.strip()}\n```"
 

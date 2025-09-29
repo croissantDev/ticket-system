@@ -585,8 +585,6 @@ if coll is None:
     return False  # or however you want to handle it
 
 thread = await coll.find_one({"thread_id": str(ctx.thread.channel.id)})
-
-    thread = await coll.find_one({"thread_id": str(ctx.thread.channel.id)})
     if thread is not None:
         can_r = ctx.author.bot or str(ctx.author.id) == thread["claimer"]
         if not can_r:

@@ -606,21 +606,33 @@ thread = await coll.find_one({"thread_id": str(ctx.thread.channel.id)})
 class GuidesCommittee(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.db = self.bot.api.get_plugin_partition(self)
+        self.db = None          # will be initialized later
+        self.db_generated = False
+
+        # Add command checks immediately
         self.bot.get_command("reply").add_check(check)
         self.bot.get_command("areply").add_check(check)
         self.bot.get_command("fareply").add_check(check)
         self.bot.get_command("freply").add_check(check)
         self.bot.get_command("close").add_check(check)
-        self.db_generated = False
 
-        # Synchronous database, I hate this, but Oliver made me do a fucking cooldown
-        # sorry :( :( :( - olly
+        # Synchronous database (still initialized here)
         self.bot.sync_db = psycopg2.connect(
-            dbname="tickets", user="cityairways", password=PASSWORD, host="citypostgres"
+            dbname="tickets",
+            user="cityairways",
+            password=PASSWORD,
+            host="citypostgres",
         )
 
         self.bot.frozen = []
+
+    async def cog_load(self):
+        """
+        Called when the cog is fully loaded into the bot.
+        Safe place to grab plugin partitions and async resources.
+        """
+        self.db = self.bot.api.get_plugin_partition(self)
+        self.db_generated = True
 
     async def cog_command_error(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):

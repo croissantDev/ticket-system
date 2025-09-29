@@ -568,35 +568,25 @@ def is_bypass():
 
 
 async def check(ctx):
-    """
-    if (ctx.author.id in PR_MEMBERS):
-        await ctx.message.channel.send("Failure to abide with DOGE, PR has been blocked from support")
-        return False
-    """
-
-    if (
-            ctx.author.id in BYPASS_LIST
-    ):  # or set( [i.id for i in ctx.author.roles]).intersection(set(ROLE_HIERARCHY[:2])): idk why i did this so commenting it out
-        return True
-
     coll = ctx.bot.plugin_db.get_partition(ctx.bot.get_cog("GuidesCommittee"))
-if coll is None:
-    await ctx.message.add_reaction("⛔")
-    return False  # or however you want to handle it
-
-thread = await coll.find_one({"thread_id": str(ctx.thread.channel.id)})
-if thread is not None:
-    can_r = ctx.author.bot or str(ctx.author.id) == thread["claimer"]
-    if not can_r:
-        if "⛔" not in [i.emoji for i in ctx.message.reactions]:  # Weird bug where check runs twice?????
+    if coll is None:
+        # DB not ready
+        if "⛔" not in [i.emoji for i in ctx.message.reactions]:
             await ctx.message.add_reaction("⛔")
-    return can_r
+        return False
 
-# cba to do this properly so repetition it is
-if "⛔" not in [i.emoji for i in ctx.message.reactions]:  # Weird bug where check runs twice?????
-    await ctx.message.add_reaction("⛔")
-return False
+    thread = await coll.find_one({"thread_id": str(ctx.thread.channel.id)})
+    if thread is not None:
+        can_r = ctx.author.bot or str(ctx.author.id) == thread["claimer"]
+        if not can_r:
+            if "⛔" not in [i.emoji for i in ctx.message.reactions]:
+                await ctx.message.add_reaction("⛔")
+        return can_r
 
+    # fallback if no thread
+    if "⛔" not in [i.emoji for i in ctx.message.reactions]:
+        await ctx.message.add_reaction("⛔")
+    return False
 
 class GuidesCommittee(commands.Cog):
     def __init__(self, bot):

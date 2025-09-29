@@ -580,6 +580,12 @@ async def check(ctx):
         return True
 
     coll = ctx.bot.plugin_db.get_partition(ctx.bot.get_cog("GuidesCommittee"))
+if coll is None:
+    await ctx.message.add_reaction("⛔")
+    return False  # or however you want to handle it
+
+thread = await coll.find_one({"thread_id": str(ctx.thread.channel.id)})
+
     thread = await coll.find_one({"thread_id": str(ctx.thread.channel.id)})
     if thread is not None:
         can_r = ctx.author.bot or str(ctx.author.id) == thread["claimer"]

@@ -296,25 +296,14 @@ async def create_database():
     async with pool.acquire() as conn:
         async with conn.cursor() as cur:
             # Create the table
-            await cur.execute(
-                """
-                CREATE TABLE IF NOT EXISTS tickets
-                (
-                    id
-                    SERIAL
-                    PRIMARY
-                    KEY,
-                    user_id
-                    BIGINT
-                    NOT
-                    NULL,
-                    timestamp
-                    TIMESTAMP
-                    DEFAULT
-                    CURRENT_TIMESTAMP
-                );
-                """
-            )
+            await cur.execute("""
+    CREATE TABLE IF NOT EXISTS tickets (
+        id SERIAL PRIMARY KEY,
+        user_id BIGINT NOT NULL,
+        timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    );
+""")
+
 
             # Create indexes
             await cur.execute(
@@ -399,14 +388,11 @@ async def add_tickets(pool, user_id):
 async def get_tickets_in_timeframe(pool, user_id, days):
     async with pool.acquire() as conn:
         async with conn.cursor() as cur:
-            await cur.execute(
-                """
-                SELECT COUNT(*)
-                FROM tickets
-                WHERE user_id = %s AND timestamp >= NOW() - INTERVAL '%s days';
-                """,
-                (user_id, days),
-            )
+            await cur.execute("""
+    SELECT COUNT(*) FROM tickets
+    WHERE user_id = %s AND timestamp >= NOW() - (%s || ' days')::interval;
+""", (user_id, days))
+
             result = await cur.fetchone()
             return result[0]
 
@@ -435,23 +421,16 @@ Ready to be implemented with @commands.dynamic_cooldown(new_cooldown, type=comma
 """
 
 
-def get_cooldown_time_sync(pool, ctx):
-    try:
-        user_id = ctx.author.id
-    except Exception:
-        user_id = ctx
+def get_cooldown_time_sync(sync_db, ctx):
+    user_id = getattr(ctx.author, "id", ctx)
+    with sync_db.cursor() as cursor:
+        cursor.execute("""
+            SELECT COUNT(*) FROM tickets
+            WHERE user_id = %s
+              AND DATE_TRUNC('week', timestamp) = DATE_TRUNC('week', CURRENT_DATE);
+        """, (user_id,))
+        tickets = cursor.fetchone()[0]
 
-    print("yoooooooooooooo")
-    conn = pool
-    cursor = conn.cursor()
-
-    cursor.execute(
-        "SELECT COUNT(*) FROM tickets WHERE user_id = %s AND DATE_TRUNC('week', timestamp) = DATE_TRUNC('week', CURRENT_DATE)",
-        (user_id,),
-    )
-    tickets = cursor.fetchone()[0]
-
-    cursor.close()
 
     if tickets < 10:
         return 0
@@ -618,6 +597,9 @@ class GuidesCommittee(commands.Cog):
         """
         self.db = self.bot.api.get_plugin_partition(self)
         self.db_generated = True
+        self.db = self.bot.api.get_plugin_partition(self)
+        pool = await create_database()
+        self.bot.pool = pool
 
     async def cog_command_error(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
@@ -894,26 +876,18 @@ class GuidesCommittee(commands.Cog):
             )
             await ctx.reply(embed=e)
 
-    async def cog_load(self):
-        pool = await create_database()
-        self.bot.pool = pool
-        self.db_generated = True
 
     async def cog_unload(self):
-        cmds = [
-            self.bot.get_command("reply"),
-            self.bot.get_command("freply"),
-            self.bot.get_command("areply"),
-            self.bot.get_command("fareply"),
-            self.bot.get_command("close"),
-        ]
-        for i in cmds:
-            if check in i.checks:
-                print(f"REMOVING CHECK IN {i.name}")  # Some logging yh
-                i.remove_check(check)
-
+    for cmd_name in ("reply", "freply", "areply", "fareply", "close"):
+        cmd = self.bot.get_command(cmd_name)
+        if check in cmd.checks:
+            cmd.remove_check(check)
+    try:
         self.bot.sync_db.close()
         await self.bot.pool.terminate()
+    except Exception as e:
+        print(f"Error unloading database: {e}")
+
 
     @commands.command()
     @is_bypass()

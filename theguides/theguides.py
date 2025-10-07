@@ -570,17 +570,11 @@ async def check(ctx):
 class GuidesCommittee(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.db = None          # will be initialized later
+        self.db = None
         self.db_generated = False
+        self.bot.frozen = []
 
-        # Add command checks immediately
-        self.bot.get_command("reply").add_check(check)
-        self.bot.get_command("areply").add_check(check)
-        self.bot.get_command("fareply").add_check(check)
-        self.bot.get_command("freply").add_check(check)
-        self.bot.get_command("close").add_check(check)
-
-        # Synchronous database (still initialized here)
+        # Synchronous DB connection (keep for legacy cooldown code)
         self.bot.sync_db = psycopg2.connect(
             dbname="tickets",
             user="cityairways",
@@ -588,18 +582,40 @@ class GuidesCommittee(commands.Cog):
             host="citypostgres",
         )
 
-        self.bot.frozen = []
+        # Add command checks immediately
+        for cmd_name in ("reply", "areply", "freply", "fareply", "close"):
+            cmd = self.bot.get_command(cmd_name)
+            if cmd:
+                cmd.add_check(check)
 
     async def cog_load(self):
-        """
-        Called when the cog is fully loaded into the bot.
-        Safe place to grab plugin partitions and async resources.
-        """
+        """Called when cog is fully loaded; initializes async DB and plugin partition."""
         self.db = self.bot.api.get_plugin_partition(self)
         self.db_generated = True
-        self.db = self.bot.api.get_plugin_partition(self)
-        pool = await create_database()
-        self.bot.pool = pool
+
+        # Initialize async DB pool
+        self.bot.pool = await create_database()
+
+    async def cog_unload(self):
+        """Clean up connections and remove command checks."""
+        # Remove the checks
+        for cmd_name in ("reply", "freply", "areply", "fareply", "close"):
+            cmd = self.bot.get_command(cmd_name)
+            if cmd and check in cmd.checks:
+                cmd.remove_check(check)
+
+        # Close synchronous DB
+        try:
+            self.bot.sync_db.close()
+        except Exception as e:
+            print(f"Error closing sync_db: {e}")
+
+        # Close async pool
+        try:
+            await self.bot.pool.close()
+        except Exception as e:
+            print(f"Error closing async pool: {e}")
+
 
     async def cog_command_error(self, ctx, error):
         if isinstance(error, commands.CommandOnCooldown):
@@ -877,16 +893,7 @@ class GuidesCommittee(commands.Cog):
             await ctx.reply(embed=e)
 
 
-  async def cog_unload(self):
-    for cmd_name in ("reply", "freply", "areply", "fareply", "close"):
-        cmd = self.bot.get_command(cmd_name)
-        if check in cmd.checks:
-            cmd.remove_check(check)
-    try:
-        self.bot.sync_db.close()
-        await self.bot.pool.terminate()
-    except Exception as e:
-        print(f"Error unloading database: {e}")
+
 
 
 

@@ -877,7 +877,7 @@ class GuidesCommittee(commands.Cog):
             await ctx.reply(embed=e)
 
 
-    async def cog_unload(self):
+   async def cog_unload(self):
     for cmd_name in ("reply", "freply", "areply", "fareply", "close"):
         cmd = self.bot.get_command(cmd_name)
         if check in cmd.checks:
@@ -887,6 +887,7 @@ class GuidesCommittee(commands.Cog):
         await self.bot.pool.terminate()
     except Exception as e:
         print(f"Error unloading database: {e}")
+
 
 
     @commands.command()

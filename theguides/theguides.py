@@ -1224,13 +1224,13 @@ class GuidesCommittee(commands.Cog):
                     "Great work on the ticket Chairwoman Abbi!"
                 )  # for the chairwoman
 
-            if day == 8:
+            if day == 5:
                 await channel.send(
-                    "⚠ **TICKET 8 WARNING** ⚠\nClosing your 9th ticket will send a message to management where "  # had to add spaces its been bugging me for months = olly
+                    "⚠ **TICKET 5 WARNING** ⚠\nClosing your 6th ticket will send a message to management where "  # had to add spaces its been bugging me for months = olly
                     "warnings/strikes/demotions might take place, if you have tickets currently claimed **UNCLAIM THEM**"
                 )
 
-            if day > 8:
+            if day > 5:
                 channelo = await self.bot.fetch_channel(1311111724379672608)
                 await channelo.send(
                     f"⚠**MORE THAN 8 WARNING**⚠\n<@{closer.id}> closed more than 8 tickets in a day. This is their ticket number `{day}` today"

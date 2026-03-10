@@ -1233,7 +1233,7 @@ class GuidesCommittee(commands.Cog):
             if day > 5:
                 channelo = await self.bot.fetch_channel(1311111724379672608)
                 await channelo.send(
-                    f"⚠**MORE THAN 8 WARNING**⚠\n<@{closer.id}> closed more than 8 tickets in a day. This is their ticket number `{day}` today"
+                    f"⚠**MORE THAN 5 WARNING**⚠\n<@{closer.id}> closed more than 5 tickets in a day. This is their ticket number `{day}` today"
                     # neutral pronoun changed to - olly ffs the gc is so progressive be better
                 )
 

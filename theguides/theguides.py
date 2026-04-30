@@ -24,16 +24,11 @@ BYPASS_LIST = [
     767824073186869279,
     # chairwoman abbi, she leads the way, she is the best chairwoman ever to grace the earth, CHAIRWOMAN ABBI DA DA DA CHAIRWOMAN, FROM DAWN TO DUSK, SHE LEADS THE WAY, MAKING DECISIONS SHES GOT SOMETHING TO PROVE
     249568050951487499,  # akhil (the ugly)
-    323473569008975872,  # jesus (olly)
     381170131721781248,  # crois
     329991150712651776, # joshy
     307297123869655050, # line (penguin server owner)
-    346382745817055242,  # felix (the rich guy)
     211368856839520257,  # illy
     1221249361745543168,  # amar
-    335415340190269440,  # Olly's alt
-    697444795785674783,  # zoose
-
 ]
 
 ROLE_HIERARCHY = [
